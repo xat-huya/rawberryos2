@@ -1,0 +1,18 @@
++------------------------------------+
+| HEAD  : Metadata                   |
++------------------------------------+
+| db 0          : RBA signature null |
+| db "RA"       : RBA signature part |
+| db 32         : RBA signature space|
+| db 2          : Executable flag    |
+| dd _main      : Pointer to code    |
+| db 0          : Privilege / Ring   |
+| db 0          : Yes                |
++------------------------------------+
+
++------------------------------------+
+| BODY  : Code                       |
++------------------------------------+
+| _main        : Execution entry     |
+| ret          : Exit (EAX = exit)   |
++------------------------------------+

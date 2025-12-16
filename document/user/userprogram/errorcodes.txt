@@ -1,0 +1,12 @@
++------------------------------------+
+| USER PANIC : Exit Codes            |
++------------------------------------+
+| 1          : Intentional (EAX=1)   |
+| 2          : [Reserved]            |
+| 3          : [Reserved]            |
+| 4          : [Reserved]            |
+| 5          : [Reserved]            |
+| 6          : [Reserved]            |
+| 7          : No Executable flag    |
+| 8          : No signature          |
++------------------------------------+
