@@ -9,6 +9,7 @@ typedef unsigned int   uint32_t;
 
 volatile uint16_t* vga = (volatile uint16_t*)VGA_ADDR;
 extern void exec_rba();
+extern uint8_t get_key();
 int VGA_POS;
 
 unsigned char check_primary_ata(void) {
@@ -62,6 +63,30 @@ void kernel_death(){
     print_str(msg);
     while(1){}
 }
+char scancode_to_ascii(uint8_t sc) {
+    // Top row: Q-P
+        if (sc >= 0x02 && sc <= 0x0B) return '1' + (sc - 0x02);
+
+    if (sc >= 0x10 && sc <= 0x19) {
+        char map[] = {'q','w','e','r','t','y','u','i','o','p'};
+        return map[sc - 0x10];
+    }
+
+    // Home row: A-L
+    if (sc >= 0x1E && sc <= 0x26) {
+        char map[] = {'a','s','d','f','g','h','j','k','l'};
+        return map[sc - 0x1E];
+    }
+
+    // Bottom row: Z-M
+    if (sc >= 0x2C && sc <= 0x32) {
+        char map[] = {'z','x','c','v','b','n','m'};
+        return map[sc - 0x2C];
+    }
+
+    return 0; // unknown / ignore
+}
+
 
 __attribute__((noreturn))
 void kmain(void) {
@@ -100,7 +125,42 @@ void kmain(void) {
     uint8_t k = ecx_val & 0xFF;
     print_chr(hex[(k >> 4) & 0xF]);
     print_chr(hex[k & 0xF]);
+    print_newline();
+    int state;
+    int shift = 0; // 0 = no shift, 1 = shift pressed
+
+while(1) {
+    uint8_t sc = get_key();
+
+    // skip invalid
+    if (!sc) continue;
+
+    // Shift press/release
+    if (sc == 0x2A || sc == 0x36) { shift = 1; continue; } // pressed
+    if (sc == 0xAA || sc == 0xB6) { shift = 0; continue; } // released
+
+    // ignore key releases for other keys
+    if (sc & 0x80) continue;
+
+    char c = 0;
+    if (sc == 0x39) c = ' ';          // space
+        else if (sc == 0x0E) {             // Backspace
+        if (VGA_POS > 0) VGA_POS--;    // move cursor back
+        vga[VGA_POS] = ((uint16_t)WHITE_ON_BLACK << 8) | ' '; // erase char
+        continue;
+    }
+    else if (sc == 0x1C) {             // Enter
+        print_newline();
+        continue;
+    }
+    else c = scancode_to_ascii(sc);   // letters
+
+    if (c) {
+        if (shift && c >= 'a' && c <= 'z') c -= 32;
+        print_chr(c);
+    }
+}
 
 
-    while(1) {}
+
 }
